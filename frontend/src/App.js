@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import WeatherCard from "./components/WeatherCard";
 import "./styles/app.css";
@@ -9,35 +9,16 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [background, setBackground] = useState("default");
-  const [suggestedCities, setSuggestedCities] = useState([]);
 
-  useEffect(() => {
-    // Fetch weather based on geolocation on load
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        await fetchWeather(null, latitude, longitude);
-      },
-      () => setError("Unable to retrieve your location!")
-    );
-  }, []);
-
-  const fetchWeather = async (city = null, lat = null, lon = null) => {
+  const fetchWeather = async (city) => {
     setLoading(true);
-    setError("");
-    setSuggestedCities([]);
-
-    const query = city ? `?city=${city}` : `?lat=${lat}&lon=${lon}`;
+    setError(""); // Clear previous errors
     try {
-      const response = await axios.get(`/api/weather${query}`);
+      const response = await axios.get(`/api/weather?city=${city}`);
       setWeather(response.data);
       setBackground(getBackground(response.data.current.condition.text));
     } catch (error) {
-      if (city || (lat && lon)) {
-        suggestNearbyCities(city || `${lat},${lon}`);
-      } else {
-        setError("Error fetching weather data!");
-      }
+      setError("Error fetching weather data!");
     }
     setLoading(false);
   };
@@ -45,22 +26,40 @@ function App() {
   const getBackground = (condition) => {
     if (condition.toLowerCase().includes("sunny")) return "sunny";
     if (condition.toLowerCase().includes("rain")) return "rainy";
-    if (condition.toLowerCase().includes("cloud")) return "cloudy";
+    if (condition.toLowerCase().includes("snow")) return "snowy";
+    if (condition.toLowerCase().includes("partly cloudy")) return "cloudy";
+    if (condition.toLowerCase().includes("clear")) return "clear";
     return "default";
-  };
-
-  const suggestNearbyCities = async (query) => {
-    try {
-      const response = await axios.get(`/api/suggested-cities?query=${query}`);
-      setSuggestedCities(response.data || []);
-      setError("Unable to find weather for your location. Try a nearby city:");
-    } catch {
-      setError("Unable to suggest nearby cities.");
-    }
   };
 
   return (
     <div className={`app ${background}`}>
+      {/* Weather Animations */}
+      {background === "cloudy" && (
+        <div className="clouds">
+          <div
+            className="cloud large"
+            style={{ top: "20%", left: "-200px" }}
+          ></div>
+          <div
+            className="cloud small"
+            style={{ top: "50%", left: "-300px" }}
+          ></div>
+          <div
+            className="cloud large"
+            style={{ top: "70%", left: "-100px" }}
+          ></div>
+        </div>
+      )}
+      {background === "clear" && <div className="sky"></div>}
+      {background === "rainy" && (
+        <div className="rain">{Array(20).fill(<div />)}</div>
+      )}
+      {background === "snowy" && (
+        <div className="snow">{Array(20).fill(<div />)}</div>
+      )}
+
+      {/* Search Box */}
       <div className="search-box">
         <input
           type="text"
@@ -69,29 +68,20 @@ function App() {
           onChange={(e) => setCity(e.target.value)}
         />
         <button onClick={() => fetchWeather(city)}>Search</button>
-        <button
-          onClick={() =>
-            navigator.geolocation.getCurrentPosition(
-              ({ coords }) =>
-                fetchWeather(null, coords.latitude, coords.longitude),
-              () => setError("Geolocation not available.")
-            )
-          }
-        >
-          📍
-        </button>
       </div>
-      {loading && <div className="loader">Loading...</div>}
-      {error && <div className="error">{error}</div>}
-      {suggestedCities.length > 0 && (
-        <div className="suggested-cities">
-          {suggestedCities.map((city) => (
-            <button key={city} onClick={() => fetchWeather(city)}>
-              {city}
-            </button>
-          ))}
-        </div>
+
+      {/* Placeholder Message */}
+      {!weather && !loading && !error && (
+        <div className="placeholder">Enter a city to see the weather!</div>
       )}
+
+      {/* Loading Indicator */}
+      {loading && <div className="loader">Loading...</div>}
+
+      {/* Error Message */}
+      {error && <div className="error">{error}</div>}
+
+      {/* Weather Data */}
       {weather && <WeatherCard weather={weather} />}
     </div>
   );
