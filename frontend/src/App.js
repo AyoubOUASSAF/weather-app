@@ -14,7 +14,7 @@ function App() {
     setLoading(true);
     setError(""); // Clear previous errors
     try {
-      const response = await axios.get(`/api/weather?city=${city}`);
+      const response = await axios.get(`http://backend:5000/api/weather?city=${city}`);
       setWeather(response.data);
       setBackground(getBackground(response.data.current.condition.text));
     } catch (error) {
