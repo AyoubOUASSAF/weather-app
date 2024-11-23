@@ -1,10 +1,16 @@
 const express = require("express");
 const axios = require("axios");
 const dotenv = require("dotenv");
+const cors = require("cors"); // Import CORS middleware
 
 dotenv.config();
 const app = express();
 const PORT = 5000;
+
+// Enable CORS for requests from the frontend
+app.use(cors({
+  origin: "http://localhost:3000", // Allow only the frontend origin
+}));
 
 // Route to fetch weather data
 app.get("/api/weather", async (req, res) => {
@@ -26,6 +32,7 @@ app.get("/api/weather", async (req, res) => {
   }
 });
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
