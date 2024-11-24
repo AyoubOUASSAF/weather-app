@@ -17,7 +17,7 @@ A dynamic weather application built with React.js and Node.js, providing real-ti
 - **Backend:** Node.js, Express.js
 - **API:** WeatherAPI
 - **Styling:** CSS
-- **Deployment:** Docker, Kubernetes (Coming Soon!)
+- **Deployment:** Docker
 
 ---
 
